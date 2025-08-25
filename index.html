@@ -5,109 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class Status Dashboard</title>
 <style>
-  :root {
-    --bg: #0b1220;
-    --card: #121a2a;
-    --text: #e8eefb;
-    --muted: #a9b3c7;
-    --green: #3ddc84;
-    --red: #ff5d5d;
+  :root{
+    --bg:#0b1220; --card:#121a2a; --text:#e8eefb; --muted:#a9b3c7; --green:#3ddc84; --red:#ff5d5d;
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 24px; background: var(--bg); color: var(--text);
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  }
-  header {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-  h1 { font-size: 24px; margin: 0; }
-  #now {
-    font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px;
+  *{ box-sizing:border-box }
+  body{
+    margin:0; padding:12px; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
   }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 16px;
+  /* Compact “widget” layout */
+  header{ display:none } /* hide big header on phone widget; show time inside each card instead */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); /* square-ish */
+    gap:10px;
+    justify-content:center;
+    align-items:start;
   }
-  .card {
-    background: var(--card);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 16px;
-    padding: 16px;
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.18);
+  .card{
+    background:var(--card);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:14px;
+    padding:8px;
+    display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+    box-shadow:0 6px 14px rgba(0,0,0,.22);
+    aspect-ratio:1/1;           /* force square */
+    min-width:120px;            /* keeps two or three per row on iPhone */
   }
-  .avatar {
-    width: 96px; height: 96px; border-radius: 50%; overflow: hidden;
-    background: #0d1322; display: grid; place-items: center;
-    border: 2px solid rgba(255,255,255,0.1);
+  .avatar{
+    width:52px; height:52px; border-radius:50%; overflow:hidden;
+    background:#0d1322; display:grid; place-items:center;
+    border:1px solid rgba(255,255,255,.1);
   }
-  .avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .name { font-weight: 700; text-align: center; }
-  .status {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 6px 10px; border-radius: 999px; font-size: 12px;
-    background: rgba(255,255,255,0.05); color: var(--muted);
+  .avatar img{ width:100%; height:100%; object-fit:cover }
+  .name{ font-weight:700; font-size:14px; text-align:center; line-height:1.2; margin-top:6px }
+  .status{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:2px 8px; border-radius:999px; font-size:11px;
+    background:rgba(255,255,255,.06); color:var(--muted); margin-top:4px;
   }
-  .dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 0 2px rgba(0,0,0,0.15) inset;
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 0 2px rgba(0,0,0,.12) inset }
+  .dot.on{ background:var(--red) }
+  .course{ font-size:11px; text-align:center; min-height:1.2em; margin-top:4px }
+  .small{ color:var(--muted); font-size:10px; text-align:center; margin-top:2px }
+
+  /* Slightly roomier on wider phones/tablets */
+  @media (min-width:430px){
+    .grid{ grid-template-columns:repeat(auto-fill,minmax(150px,1fr)) }
+    .avatar{ width:56px; height:56px }
   }
-  .dot.on { background: var(--red); }
-  .course { color: var(--text); font-size: 13px; text-align: center; min-height: 1.2em; }
-  .small { color: var(--muted); font-size: 12px; }
-  footer { margin-top: 24px; color: var(--muted); font-size: 12px; }
-  a, a:visited { color: #93b7ff; text-decoration: none; }
 </style>
 </head>
 <body>
-<header>
-  <h1>Class Status Dashboard</h1>
-  <div id="now">—</div>
-</header>
 
 <div id="app" class="grid"></div>
 
-
 <script>
+/* --- Your data --- */
 const PEOPLE = [{"name":"Suhan","slug":"suhan","entries":[{"days":[2,4],"start_min":480,"end_min":555,"course":"biochem"},{"days":[2,4],"start_min":570,"end_min":645,"course":"bio"},{"days":[2,4],"start_min":840,"end_min":915,"course":"psyc"},{"days":[2,4],"start_min":930,"end_min":1005,"course":"nsci"},{"days":[3],"start_min":1200,"end_min":1260,"course":"phide"},{"days":[1],"start_min":1140,"end_min":1200,"course":"sangeet"}]},{"name":"Raghav","slug":"raghav","entries":[{"days":[1],"start_min":610,"end_min":660,"course":"english"},{"days":[3],"start_min":610,"end_min":660,"course":"english"},{"days":[5],"start_min":610,"end_min":660,"course":"english"},{"days":[2,4],"start_min":570,"end_min":645,"course":"data120"},{"days":[1],"start_min":960,"end_min":990,"course":"workmeeting"},{"days":[2],"start_min":960,"end_min":990,"course":"workmeeting"},{"days":[3],"start_min":960,"end_min":990,"course":"workmeeting"},{"days":[4],"start_min":960,"end_min":990,"course":"workmeeting"},{"days":[5],"start_min":960,"end_min":990,"course":"workmeeting"}]},{"name":"Navin","slug":"navin","entries":[{"days":[1],"start_min":610,"end_min":685,"course":"MEJO463"},{"days":[3],"start_min":610,"end_min":685,"course":"MEJO463"},{"days":[1],"start_min":740,"end_min":845,"course":"MEJO187"},{"days":[3],"start_min":740,"end_min":845,"course":"MEJO187"},{"days":[2,4],"start_min":570,"end_min":645,"course":"HIST248"},{"days":[2,4],"start_min":750,"end_min":825,"course":"PWAD250"},{"days":[2,4],"start_min":840,"end_min":915,"course":"PWAD435"},{"days":[2],"start_min":915,"end_min":1110,"course":"VIDEO"},{"days":[3],"start_min":870,"end_min":1110,"course":"VIDEO"},{"days":[4],"start_min":915,"end_min":1110,"course":"VIDEO"},{"days":[1],"start_min":990,"end_min":1095,"course":"HANDBALL"},{"days":[5],"start_min":990,"end_min":1095,"course":"HANDBALL"}]},{"name":"Favor","slug":"favor","entries":[{"days":[1,3,5],"start_min":545,"end_min":595,"course":"SPHG351 Lecture"},{"days":[2,4],"start_min":570,"end_min":645,"course":"HPM502 - 001"},{"days":[2,4],"start_min":660,"end_min":735,"course":"BIOL252 PM"},{"days":[1,3,5],"start_min":740,"end_min":790,"course":"CHEM262 - 002 Lecture"},{"days":[2,4],"start_min":750,"end_min":825,"course":"HPM541 - 001 Lecture"},{"days":[1],"start_min":930,"end_min":1005,"course":"EPID600 - 001"},{"days":[3],"start_min":935,"end_min":1070,"course":"EPID600 - 603 Recitation"},{"days":[2],"start_min":1020,"end_min":1080,"course":"PM Session"},{"days":[3],"start_min":1170,"end_min":1230,"course":"AED Meetings"},{"days":[1],"start_min":1020,"end_min":1080,"course":"HPM501 - 001"}]},{"name":"Parag","slug":"parag","entries":[{"days":[1,3,5],"start_min":610,"end_min":660,"course":"STOR320"},{"days":[2,4],"start_min":480,"end_min":555,"course":"ECON468"},{"days":[2,4],"start_min":570,"end_min":645,"course":"DATA120"},{"days":[2,4],"start_min":750,"end_min":825,"course":"BUSI403"},{"days":[2,4],"start_min":805,"end_min":880,"course":"STOR455"},{"days":[3],"start_min":870,"end_min":945,"course":"STOR320LAB"},{"days":[1],"start_min":870,"end_min":990,"course":"SCOUT"},{"days":[3],"start_min":930,"end_min":1050,"course":"SCOUT"},{"days":[4],"start_min":870,"end_min":990,"course":"SCOUT"}]}];
 
-function minutesNowLocal(d) {
-  return d.getHours() * 60 + d.getMinutes();
-}
-
-// Returns the matching class (or null) for a person at a given Date
-function getCurrentClass(entryList, now) {
-  const day = now.getDay(); // Sun=0 ... Sat=6
-  const mins = minutesNowLocal(now);
-  for (const e of entryList) {
-    if (e.days.includes(day) && mins >= e.start_min && mins < e.end_min) {
-      return e;
-    }
+/* --- Helpers --- */
+function minutesNowLocal(d){ return d.getHours()*60 + d.getMinutes(); }
+function getCurrentClass(entryList, now){
+  const day = now.getDay(), mins = minutesNowLocal(now);
+  for (const e of entryList){
+    if (e.days.includes(day) && mins >= e.start_min && mins < e.end_min) return e;
   }
   return null;
 }
-
-function fmtTime(d) {
-  // e.g., "Tue • 2:07 PM"
-  const day = d.toLocaleDateString(undefined, { weekday: 'short' });
-  const time = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+function fmtTime(d){
+  const day = d.toLocaleDateString(undefined,{weekday:'short'});
+  const time = d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
   return `${day} • ${time}`;
 }
 
-function render() {
+/* --- Render --- */
+function render(){
   const app = document.getElementById('app');
-  const nowLbl = document.getElementById('now');
   const now = new Date();
-  nowLbl.textContent = fmtTime(now);
-
   app.innerHTML = '';
 
-  for (const p of PEOPLE) {
+  for (const p of PEOPLE){
     const cur = getCurrentClass(p.entries, now);
     const hasClass = !!cur;
     const iconPath = 'icons/' + p.slug + '.png';
@@ -115,56 +94,39 @@ function render() {
     const card = document.createElement('div');
     card.className = 'card';
 
-    const avatar = document.createElement('div');
-    avatar.className = 'avatar';
-    const img = document.createElement('img');
-    img.alt = p.name;
-    img.src = iconPath;
+    const avatar = document.createElement('div'); avatar.className = 'avatar';
+    const img = document.createElement('img'); img.alt = p.name; img.src = iconPath;
     img.onerror = () => {
-      // fallback SVG avatar
-      avatar.innerHTML = `
-        <svg viewBox="0 0 128 128" width="96" height="96" role="img" aria-label="avatar">
-          <circle cx="64" cy="48" r="28" fill="#1f2a44"/>
-          <rect x="16" y="78" width="96" height="38" rx="19" fill="#1f2a44"/>
-        </svg>`;
+      avatar.innerHTML = `<svg viewBox="0 0 128 128" width="56" height="56" role="img" aria-label="avatar">
+        <circle cx="64" cy="48" r="28" fill="#1f2a44"/>
+        <rect x="16" y="78" width="96" height="38" rx="19" fill="#1f2a44"/>
+      </svg>`;
     };
     avatar.appendChild(img);
     card.appendChild(avatar);
 
-    const name = document.createElement('div');
-    name.className = 'name';
-    name.textContent = p.name;
-    card.appendChild(name);
+    const name = document.createElement('div'); name.className = 'name'; name.textContent = p.name; card.appendChild(name);
 
-    const status = document.createElement('div');
-    status.className = 'status';
-    const dot = document.createElement('span');
-    dot.className = 'dot' + (hasClass ? ' on' : '');
-    status.appendChild(dot);
-    const label = document.createElement('span');
-    label.textContent = hasClass ? 'In class' : 'Free';
-    status.appendChild(label);
-    card.appendChild(status);
+    const status = document.createElement('div'); status.className = 'status';
+    const dot = document.createElement('span'); dot.className = 'dot' + (hasClass ? ' on' : '');
+    const label = document.createElement('span'); label.textContent = hasClass ? 'In class' : 'Free';
+    status.appendChild(dot); status.appendChild(label); card.appendChild(status);
 
-    const course = document.createElement('div');
-    course.className = 'course';
-    course.textContent = hasClass ? cur.course : '';
-    card.appendChild(course);
+    const course = document.createElement('div'); course.className = 'course';
+    course.textContent = hasClass ? cur.course : ''; card.appendChild(course);
 
-    // Optional next-up line (nearest upcoming class today)
+    // small footer: either next class today or current local time (compact)
+    const small = document.createElement('div'); small.className = 'small';
     const mins = minutesNowLocal(now);
-    const today = p.entries
-      .filter(e => e.days.includes(now.getDay()) && e.start_min > mins)
-      .sort((a,b) => a.start_min - b.start_min);
-    const small = document.createElement('div');
-    small.className = 'small';
-    if (today.length) {
+    const today = p.entries.filter(e => e.days.includes(now.getDay()) && e.start_min > mins)
+                           .sort((a,b)=>a.start_min - b.start_min);
+    if (today.length){
       const nxt = today[0];
       const hh = String(Math.floor(nxt.start_min/60)).padStart(2,'0');
       const mm = String(nxt.start_min%60).padStart(2,'0');
-      small.textContent = 'Next: ' + nxt.course + ' at ' + hh + ':' + mm;
+      small.textContent = 'Next: ' + nxt.course + ' @ ' + hh + ':' + mm;
     } else {
-      small.textContent = 'No more classes today';
+      small.textContent = fmtTime(now);
     }
     card.appendChild(small);
 
@@ -173,7 +135,7 @@ function render() {
 }
 
 render();
-setInterval(render, 30 * 1000); // refresh every 30s
+setInterval(render, 30 * 1000);
 </script>
 </body>
 </html>
